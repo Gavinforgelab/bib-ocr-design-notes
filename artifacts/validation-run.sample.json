@@ -1,0 +1,109 @@
+{
+  "_comment": [
+    "Sanitized schema sample of the validation-run measurement record.",
+    "Field names and structure match the real artifact; every value here is",
+    "hand-constructed from the published numbers. The original stays private:",
+    "it carries filesystem paths, hardware identifiers, and footage metadata.",
+    "See docs/validation-method.md for what each group claims — and what it",
+    "deliberately does not."
+  ],
+  "schema_version": 2,
+  "measurement_basis": "measured_single_video_run",
+  "source": {
+    "redacted": "race clip metadata removed — duration/resolution/fps are the only public facts",
+    "duration_seconds": 36.5365,
+    "resolution": [1920, 1080],
+    "fps": 59.94
+  },
+  "sampling": {
+    "interval_seconds": 0.1,
+    "frames_decoded": 2190,
+    "frames_sampled": 366
+  },
+  "funnel": {
+    "person_detections": 205,
+    "ocr_candidates": 158,
+    "validated_reads": 98,
+    "stable_bibs": 2,
+    "_comment": "person_detections, not detections: no bib detector exists in this pipeline (docs/decisions.md D2). 205 is how many runners were found; each one becomes an ROI attempt whose crop is computed from keypoints."
+  },
+  "performance": {
+    "wall_seconds": 109.4,
+    "processing_factor": 2.99,
+    "frame_of_reference": "offline pass; ~3x the clip length, not 3x realtime",
+    "hardware_class": "laptop GPU"
+  },
+  "track_conclusions": {
+    "_comment": [
+      "Two counters per track, kept apart for the reason reference/frame_voting.py",
+      "prints them apart: a runner is visible in more frames than the runner is",
+      "readable in. `visible_frames` is the tracker's count. `read_frames` is the",
+      "voting count, and it is null here because per-track read counts are not",
+      "republished - the clip total (98) is in `funnel`. Collapsing the two into",
+      "one number is how a track gets credited with reads it never made."
+    ],
+    "tracks": [
+      {
+        "bib": "A0030",
+        "first_seen_seconds": 15.9,
+        "last_seen_seconds": 33.4,
+        "visible_frames": 141,
+        "read_frames": null,
+        "mean_confidence": 0.9999,
+        "contested": false,
+        "_comment": "17.5 s at 0.1 s sampling = 176 samples in the window; 141 of them show this runner. Not 141 reads: the whole clip produced 98."
+      },
+      {
+        "bib": "A0031",
+        "first_seen_seconds": 17.0,
+        "last_seen_seconds": 17.1,
+        "visible_frames": 2,
+        "read_frames": 2,
+        "mean_confidence": 0.984,
+        "contested": false,
+        "accepted_by": "start-list corroboration",
+        "_comment": "Two reads is below the voting threshold in isolation (min_evidence=5 in reference/frame_voting.py defaults), and it is published anyway - because the candidate set is constrained before the crop is read, not after. The event's timing system says which bib numbers were on course in that second; a read that agrees with one of them is not a guess with weak support, it is a confirmation. This is the difference between a raw vote and a vote against a bounded candidate set, and it is why an unattended pipeline can publish a track a human would have thrown away."
+      }
+    ]
+  },
+  "failure_categories": [
+    { "category": "no_text_in_roi", "action": "widen and retry, else archive" },
+    { "category": "low_resolution_crop", "action": "archive; candidate for VLM arbitration" },
+    { "category": "unresolved_confusion", "action": "archive; contested vote routes to arbitration" }
+  ],
+  "per_frame_log": {
+    "_comment": "the real artifact holds one entry per sampled frame; two synthetic rows show the shape",
+    "row_schema": [
+      "frame_index",
+      "timestamp_seconds",
+      "detections[]: {bbox, confidence}",
+      "roi: {cx, cy, width, height, angle_deg}",
+      "raw_ocr",
+      "normalized_bib",
+      "verdict",
+      "latency_ms"
+    ],
+    "rows": [
+      {
+        "frame_index": 396,
+        "timestamp_seconds": 6.6066,
+        "detections": [{ "bbox": [989, 653, 1005, 663], "confidence": 0.39 }],
+        "roi": { "cx": 997.0, "cy": 658.0, "width": 20.8, "height": 15.2, "angle_deg": 0.0 },
+        "raw_ocr": null,
+        "normalized_bib": null,
+        "verdict": "no_text_in_roi",
+        "latency_ms": 214
+      },
+      {
+        "frame_index": 1354,
+        "timestamp_seconds": 22.6,
+        "detections": [{ "bbox": [912, 507, 1024, 588], "confidence": 0.93 }],
+        "roi": { "cx": 968.0, "cy": 547.5, "width": 145.6, "height": 105.3, "angle_deg": 4.2 },
+        "raw_ocr": "A0O30",
+        "normalized_bib": "A0030",
+        "verdict": "validated",
+        "latency_ms": 189
+      }
+    ]
+  }
+}

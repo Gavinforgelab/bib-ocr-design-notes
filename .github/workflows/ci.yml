@@ -1,0 +1,37 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  reference:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      # The geometry and the two rules, asserted.
+      - name: Tests
+        run: python -m pytest -q
+
+      # The three self-checks and the demo, run exactly the way the README
+      # tells a reader to run them. If a step in those instructions rots, this
+      # job fails before a visitor discovers it.
+      - name: The README's own instructions
+        run: |
+          python reference/roi_from_keypoints.py
+          python reference/bib_text_normalizer.py
+          python reference/frame_voting.py
+          python reference/demo.py
